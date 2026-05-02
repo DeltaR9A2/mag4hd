@@ -36,12 +36,6 @@ int main(void)
 
   //  dv_fb_blit_blend(screen, 20, 20, cursor);
 
-  int32_t cms = 0, pms = 0, msd = 0, msa = 0, mspf = 10;
-  while(RUNNING){
-    pms = cms; cms = SDL_GetTicks(); msd = cms - pms; msa += msd;
-    if(msa > mspf){ msa -= mspf;
-
-
   while (dv_glfw_keep_going())
   {
     dv_glfw_draw_window();
