@@ -19,22 +19,20 @@ int main(void)
 
   dv_glfw_add_keyfun(&input_callback);
 
-  //  dv_fb_t *cursor = dv_get_image("cursor-arrow.png");
+  dv_fb_t *bg_clear = dv_get_image("bg-frame.png");
 
-  font_t *title_font = font_create("font-title.png", RGBA(0xFF,0xBF,0x00,0xFF), RGBA(0x3B,0x1F,0x00,0xFF));
-  font_t *prose_font = font_create("font-prose.png", RGBA(0xDD,0xDD,0xDD,0xFF), RGBA(0x22,0x22,0x22,0xFF));
-  font_t *small_font = font_create("font-small.png", RGBA(0xFF,0xFF,0xFF,0xFF), RGBA(0x22,0x22,0x22,0xFF));
+  font_t *title_font = font_create("font-title.png", RGBA(0x99,0xFF,0xFF,0xFF), RGBA(0x00,0x00,0x00,0x66));
+  font_t *prose_font = font_create("font-prose.png", RGBA(0x99,0xFF,0xFF,0xFF), RGBA(0x00,0x00,0x00,0x66));
+  font_t *small_font = font_create("font-small.png", RGBA(0x99,0xDD,0xDD,0xFF), RGBA(0x00,0x00,0x00,0x66));
 
-  dv_fb_fill(screen, RGBA(0x33,0x66,0x33,0xFF));
+  dv_fb_blit_blend(screen, 0, 0, bg_clear);
 
-  font_draw_string(title_font, "Welcome to This Game", 20, 40, screen);
-  font_draw_string(prose_font, test_string, 20, 60, screen);
-  font_wrap_string(prose_font, test_string, 20, 80, 250, screen);
-  font_wrap_string(small_font, test_string, 290, 80, 250, screen);
+  font_draw_string(title_font, "Welcome to This Game", 24, 24, screen);
+  //font_draw_string(prose_font, test_string, 20, 60, screen);
+  font_wrap_string(prose_font, test_string, 24, 48, 320, screen);
+  font_wrap_string(small_font, test_string, 32, 272, 312, screen);
 
   dv_fb_set_pixel(screen, 5, 15, RGBA(0xFF,0xFF,0xFF,0xFF));
-
-  //  dv_fb_blit_blend(screen, 20, 20, cursor);
 
   while (dv_glfw_keep_going())
   {
