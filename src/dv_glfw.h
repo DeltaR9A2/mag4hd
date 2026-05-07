@@ -14,10 +14,9 @@
 dv_fb_t *dv_glfw_init(void);
 void     dv_glfw_exit(void);
 
-void dv_glfw_draw_window();
+void dv_glfw_draw_and_swap();
 bool dv_glfw_keep_going();
 int32_t dv_glfw_get_ticks(void);
-void dv_glfw_swap_buffers();
 
 void dv_glfw_stop_game();
 

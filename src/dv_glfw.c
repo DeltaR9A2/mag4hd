@@ -126,7 +126,7 @@ dv_fb_t *dv_glfw_init(void){
   return SCREEN;
 }
 
-void dv_glfw_draw_window(){
+void dv_glfw_draw_and_swap(){
   static int ww, wh;
   glfwGetFramebufferSize(WINDOW, &ww, &wh);
   glViewport(0, 0, ww, wh);
@@ -141,10 +141,7 @@ void dv_glfw_draw_window(){
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, SCRTEX);
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-}
-
-void dv_glfw_swap_buffers(){
-    glfwSwapBuffers(WINDOW);
+  glfwSwapBuffers(WINDOW);
 }
 
 void dv_glfw_add_keyfun(GLFWkeyfun cb){
