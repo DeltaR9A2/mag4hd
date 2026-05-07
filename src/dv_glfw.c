@@ -92,9 +92,11 @@ dv_fb_t *dv_glfw_init(void){
 
   int glver = gladLoadGL(glfwGetProcAddress);
   if (glver == 0) {
-    printf("Failed to initialize OpenGL context\n");
+    fprintf(stderr, "Failed to initialize OpenGL context\n");
     return NULL;
   }
+
+  glfwSwapInterval(0);
 
   SHADER = create_shader_program(vertex_shader_src, fragment_shader_src);
 
@@ -119,6 +121,7 @@ dv_fb_t *dv_glfw_init(void){
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, SCREEN->w, SCREEN->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, SCREEN->pixels);
 
   KEEPGOING = true;
+  glfwSetTime(0.0);
 
   return SCREEN;
 }
@@ -138,10 +141,12 @@ void dv_glfw_draw_window(){
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, SCRTEX);
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-  glfwSwapBuffers(WINDOW);
-  glfwPollEvents();
 }
+
+void dv_glfw_swap_buffers(){
+    glfwSwapBuffers(WINDOW);
+}
+
 void dv_glfw_add_keyfun(GLFWkeyfun cb){
   glfwSetKeyCallback(WINDOW,cb);
 }
@@ -152,6 +157,10 @@ void dv_glfw_stop_game(){
 
 bool dv_glfw_keep_going(void){
   return KEEPGOING && !glfwWindowShouldClose(WINDOW);
+}
+
+int32_t dv_glfw_get_ticks(void){
+  return 1000 * glfwGetTime();
 }
 
 void dv_glfw_exit(void){
