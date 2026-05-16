@@ -34,7 +34,6 @@ font_t *font_create(const char *image_fn, uint32_t fg_color, uint32_t bg_color){
   uint32_t kern_color = pixels[1];
 
   uint32_t glyph_index = 0;
-  dv_fb_t *glyph_surface;
   uint32_t grx, gry, grw, grh;
 
   uint32_t glyph_count = strlen(glyph_order);
@@ -117,14 +116,13 @@ void font_draw_string(font_t *font, const char *string, uint32_t x, uint32_t y, 
 
   uint32_t cx = x;
   uint32_t cy = y;
-  uint32_t cw = font->glyphs[0].w;
-  uint32_t ch = font->glyphs[0].h;
+  uint32_t cw = 0;
+  uint32_t ch = font_get_height(font);
 
   for(uint32_t i=0; i<strlen(string); i++){
     uint8_t ascii_code = (int)string[i];
 
     cw = font->glyphs[ascii_code].w;
-    ch = font->glyphs[ascii_code].h;
 
     cx -= font->head_kerns[ascii_code];
 
