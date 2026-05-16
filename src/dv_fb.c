@@ -4,9 +4,6 @@
 #define STBI_ONLY_PNG
 #include "stb_image.h"
 
-#define STB_DS_IMPLEMENTATION
-#include "stb_ds.h"
-
 dv_fb_t *dv_fb_create(uint32_t w, uint32_t h){
   dv_fb_t *fb = calloc( 1, sizeof( dv_fb_t ) );
   fb->w = w; fb->h = h;
@@ -15,34 +12,39 @@ dv_fb_t *dv_fb_create(uint32_t w, uint32_t h){
 }
 
 dv_fb_t *dv_get_image(const char *fn){
-  static struct { char *key; dv_fb_t *value; } *image_cache = NULL;
-  dv_fb_t *image = shget(image_cache, fn);
-  if(image == NULL){
-    int w, h, n;
-    unsigned char *data = stbi_load(fn, &w, &h, &n, 4);
-    if(data == NULL){ return NULL; }
-    image = dv_fb_create(w,h);
-    memcpy(image->pixels,data,w*h*sizeof(uint32_t));
-    stbi_image_free(data);
-    shput(image_cache, fn, image);
-  }
+  int w, h, n;
+  unsigned char *data = stbi_load(fn, &w, &h, &n, 4);
+
+  if(data == NULL){ return NULL; }
+
+  dv_fb_t *image = dv_fb_create(w,h);
+  memcpy(image->pixels,data,w*h*sizeof(uint32_t));
+
+  stbi_image_free(data);
+
   return image;
 }
 
-void dv_fb_blit(dv_fb_t *dest, uint32_t dx, uint32_t dy, dv_fb_t *src){
-  for (uint32_t y = 0; y < src->h; ++y) {
-    if (y >= src->h || y + dy >= dest->h){ continue; }
-    for (uint32_t x = 0; x < src->w; ++x) {
-      if (x >= src->w || x + dx >= dest->w){ continue; }
-      dest->pixels[((y+dy)*dest->w)+(x+dx)] = src->pixels[(y*src->w)+x];
-    }
-  }
+dv_fbr_t dv_fbr_verify(dv_fb_t *fb, uint32_t x, uint32_t y, uint32_t w, uint32_t h){
+  assert( fb != NULL);
+  assert( x < fb->w );
+  assert( y < fb->h );
+  assert( w <= (fb->w - x) );
+  assert( h <= (fb->h - y) );
+
+  dv_fbr_t fbr;
+
+  fbr.fb = fb;
+  fbr.x = x;
+  fbr.y = y;
+  fbr.w = w;
+  fbr.h = h;
+
+  return fbr;
 }
 
 static inline uint32_t blend(uint32_t src, uint32_t dest) {
   uint8_t src_a = (src >> 24) & 0xFF;
-  if (src_a == 255) return src;
-  if (src_a == 0)   return dest;
 
   uint8_t src_r = (src >> 16) & 0xFF;
   uint8_t src_g = (src >> 8)  & 0xFF;
@@ -61,54 +63,29 @@ static inline uint32_t blend(uint32_t src, uint32_t dest) {
   return (0xFF << 24) | (out_r << 16) | (out_g << 8) | out_b;
 }
 
-void dv_fb_blit_part(
-  dv_fb_t* dest, uint32_t dx, uint32_t dy,
-  dv_fb_t* src,  uint32_t sx, uint32_t sy,
-                 uint32_t bw, uint32_t bh ) {
-  for (uint32_t y = 0; y < bh; ++y) {
-    uint32_t src_row = sy + y;
-    uint32_t dest_row = dy + y;
-    if (src_row >= src->h || dest_row >= dest->h){ continue; }
+void dv_fbr_blit(dv_fbr_t src, dv_fbr_t dest) {
+  uint32_t draw_w = (src.w < dest.w) ? src.w : dest.w;
+  uint32_t draw_h = (src.h < dest.h) ? src.h : dest.h;
 
-    for (uint32_t x = 0; x < bw; ++x) {
-      uint32_t src_col = sx + x;
-      uint32_t dest_col = dx + x;
-      if (src_col >= src->w || dest_col >= dest->w){ continue; }
+  uint32_t src_parent_w = src.fb->w;
+  uint32_t dest_parent_w = dest.fb->w;
 
-      uint32_t s = src->pixels[src_row * src->w + src_col];
-      uint32_t d = dest->pixels[dest_row * dest->w + dest_col];
-      dest->pixels[dest_row * dest->w + dest_col] = blend(s, d);
+  uint32_t (*src_grid)[src_parent_w] = (void*) src.fb->pixels;
+  uint32_t (*dest_grid)[dest_parent_w] = (void*) dest.fb->pixels;
+
+  for (uint32_t y = 0; y < draw_h; y++) {
+    for (uint32_t x = 0; x < draw_w; x++) {
+      uint32_t pixel = src_grid[src.y + y][src.x + x];
+      uint32_t alpha = (pixel >> 24) & 0xFF;
+
+      if (alpha == 0) continue;
+
+      if (alpha == 255) {
+        dest_grid[dest.y + y][dest.x + x] = pixel;
+      } else {
+        dest_grid[dest.y + y][dest.x + x] = blend(pixel, dest_grid[dest.y + y][dest.x + x]);
+      }
     }
   }
 }
-
-
-void dv_fb_blit_blend(dv_fb_t *dest, uint32_t dx, uint32_t dy, dv_fb_t *src){
-    for (uint32_t y = 0; y < src->h; ++y) {
-        if (y >= src->h || y + dy >= dest->h){ continue; }
-        for (uint32_t x = 0; x < src->w; ++x) {
-            if (x >= src->w || x + dx >= dest->w){ continue; }
-            dest->pixels[((y+dy)*dest->w)+(x+dx)] = blend(src->pixels[(y*src->w)+x],dest->pixels[((y+dy)*dest->w)+(x+dx)]);
-        }
-    }
-}
-
-static inline void dv_fb_unsafe_pixel(dv_fb_t *dest, uint32_t dx, uint32_t dy, uint32_t color){
-  dest->pixels[dx+(dy*dest->w)] = color;
-}
-
-void dv_fb_set_pixel(dv_fb_t *dest, uint32_t dx, uint32_t dy, uint32_t color){
-  if ( dx < dest->w && dy < dest->h ){
-    dv_fb_unsafe_pixel(dest, dx, dy, color);
-  }
-}
-
-void dv_fb_fill(dv_fb_t *dest, uint32_t color){
-  for (uint32_t y = 0; y < dest->h; ++y) {
-    for (uint32_t x = 0; x < dest->w; ++x) {
-      dv_fb_unsafe_pixel(dest, x, y, color);
-    }
-  }
-}
-
 

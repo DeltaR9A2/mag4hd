@@ -12,10 +12,11 @@ typedef struct{
 dv_fb_t *dv_fb_create(uint32_t w, uint32_t h);
 dv_fb_t *dv_get_image(const char *fn);
 
-void dv_fb_blit(dv_fb_t *dest, uint32_t dx, uint32_t dy, dv_fb_t *src);
-void dv_fb_blit_part(dv_fb_t* dest, uint32_t dx, uint32_t dy, dv_fb_t* src,  uint32_t sx, uint32_t sy, uint32_t bw, uint32_t bh );
-void dv_fb_blit_blend(dv_fb_t *dest, uint32_t dx, uint32_t dy, dv_fb_t *src);
+typedef struct{
+  dv_fb_t *fb;
+  uint32_t x, y, w, h;
+} dv_fbr_t;
 
-void dv_fb_set_pixel(dv_fb_t *dest, uint32_t dx, uint32_t dy, uint32_t pixel);
-void dv_fb_fill(dv_fb_t *dest, uint32_t color);
+dv_fbr_t dv_fbr_verify(dv_fb_t *fb, uint32_t x, uint32_t y, uint32_t w, uint32_t h);
 
+void dv_fbr_blit(dv_fbr_t src, dv_fbr_t dest);
