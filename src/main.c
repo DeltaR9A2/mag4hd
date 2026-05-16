@@ -1,6 +1,4 @@
-
 #include <unistd.h>
-#include <stdio.h>
 
 #include "dv_glfw.h"
 #include "dv_font.h"
@@ -15,8 +13,6 @@ void input_callback(GLFWwindow* window, int key, int scancode, int action, int m
     dv_glfw_stop_game();
   }
 }
-
-char status_buffer[256] = "00000";
 
 int main(void){
   dv_fb_t *screen_data = dv_glfw_init();
